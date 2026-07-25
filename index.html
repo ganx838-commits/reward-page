@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收款&利润计算器</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+        body{background:#f5f5f5;padding:20px;text-align:center}
+        .box{background:#fff;padding:30px;border-radius:16px;max-width:360px;margin:20px auto}
+        h2{color:#333;margin-bottom:10px}
+        .tip{color:#666;margin:15px 0 25px}
+        #qrcode{width:260px;border:1px solid #eee;border-radius:8px}
+        .calc-box{margin-top:40px;text-align:left}
+        input{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:8px}
+        button{width:100%;padding:12px;background:#007aff;color:white;border:none;border-radius:8px;margin-top:10px;font-size:16px}
+        .result{margin-top:15px;font-size:18px;color:#000;font-weight:bold}
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>感谢打赏支持</h2>
+    <p class="tip">扫码一杯奶茶，万分感谢</p>
+    <img id="qrcode" alt="收款码" src="qrcode.jpg">
+
+    <div class="calc-box">
+        <h3 style="text-align:center;margin-bottom:15px">摆摊利润计算器</h3>
+        <input type="number" id="cost" placeholder="输入总成本">
+        <input type="number" id="income" placeholder="输入总收入">
+        <button onclick="calcProfit()">计算纯利润</button>
+        <div class="result" id="res"></div>
+    </div>
+</div>
+
+<script>
+function calcProfit(){
+    let cost = Number(document.getElementById('cost').value);
+    let income = Number(document.getElementById('income').value);
+    let profit = income - cost;
+    document.getElementById('res').innerText = "纯利润：" + profit + " 元";
+}
+</script>
+</body>
+</html>
