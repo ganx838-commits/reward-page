@@ -206,6 +206,7 @@ const recordWrap = document.getElementById("recordWrap");
 const resultDom = document.getElementById("result");
 const rewardPop = document.getElementById("rewardPop");
 
+// 弹窗开关
 function openReward(){
     rewardPop.style.display = "flex";
 }
@@ -213,6 +214,7 @@ function closeReward(){
     rewardPop.style.display = "none";
 }
 
+// 添加商品模块
 function addGoods(){
     goodsIndex++;
     let div = document.createElement("div");
@@ -239,6 +241,7 @@ function addGoods(){
     goodsBox.appendChild(div);
 }
 
+// 核心利润计算
 function calcProfit(){
     let totalSale = 0;
     let totalCost = 0;
@@ -255,4 +258,113 @@ function calcProfit(){
         totalCost += goodsCost;
         detailText += `${name}｜售出${num}件｜营收${sale.toFixed(2)}｜毛利${(sale-goodsCost).toFixed(2)}\n`;
     })
-    let loss = Number(document.getElementByI
+    // 当日损耗
+    let loss = Number(document.getElementById("lossNum").value);
+
+    // 单日固定开销求和
+    let rent = Number(document.getElementById("rent").value);
+    let worker = Number(document.getElementById("worker").value);
+    let oil = Number(document.getElementById("oil").value);
+    let light = Number(document.getElementById("light").value);
+    let bag = Number(document.getElementById("bag").value);
+    let taste = Number(document.getElementById("taste").value);
+    let dayFixCost = rent + worker + oil + light + bag + taste;
+
+    // 月度日均分摊
+    let dayCount = Number(document.getElementById("dayNum").value);
+    let house = Number(document.getElementById("house").value);
+    let food = Number(document.getElementById("food").value);
+    let homeLight = Number(document.getElementById("homeLight").value);
+    let device = Number(document.getElementById("device").value);
+    let other = Number(document.getElementById("other").value);
+    let monthTotal = house + food + homeLight + device + other;
+    let avgMonthCost = monthTotal / dayCount;
+
+    // 总支出、纯利润
+    let allCost = totalCost + loss + dayFixCost + avgMonthCost;
+    let netProfit = totalSale - allCost;
+
+    // 账单文本
+    currentBillText = `=====摆摊利润账单=====
+【商品明细】
+${detailText}
+商品总营收：${totalSale.toFixed(2)}元
+商品总进货成本：${totalCost.toFixed(2)}元
+当日损耗：${loss.toFixed(2)}元
+
+【单日固定开销】${dayFixCost.toFixed(2)}元
+摊位租金${rent}｜人工${worker}｜油费${oil}
+耗材${light}｜包装${bag}｜试吃${taste}
+
+【月度分摊日均】${avgMonthCost.toFixed(2)}元
+月总开销${monthTotal}元，每月出摊${dayCount}天
+
+今日全部总成本：${allCost.toFixed(2)}元
+今日纯利润：${netProfit.toFixed(2)}元
+${netProfit >= 0 ? "恭喜盈利！" : "今日亏损，注意控成本"}`;
+
+    // 展示结果
+    resultDom.innerText = currentBillText;
+    resultDom.style.display = "block";
+}
+
+// 复制账单
+function copyText(){
+    if(!currentBillText){
+        alert("请先点击【一键计算利润】");
+        return;
+    }
+    navigator.clipboard.writeText(currentBillText).then(()=>{
+        alert("账单复制成功！");
+    })
+}
+
+// 保存账单到本地记录
+function saveBill(){
+    if(!currentBillText){
+        alert("请先点击【一键计算利润】");
+        return;
+    }
+    let selectDay = document.getElementById("selectDate").value;
+    let recordObj = {
+        date: selectDay,
+        text: currentBillText
+    };
+    recordList.push(recordObj);
+    localStorage.setItem(storageKey, JSON.stringify(recordList));
+    renderRecord();
+    alert("账单保存完成！");
+}
+
+// 渲染历史账单
+function renderRecord(){
+    recordWrap.innerHTML = "";
+    if(recordList.length === 0){
+        recordWrap.innerHTML = `<div class="empty">暂无保存账单</div>`;
+        return;
+    }
+    recordList.forEach((item,idx)=>{
+        let recDiv = document.createElement("div");
+        recDiv.className = "record-item";
+        recDiv.innerHTML = `
+        <div class="record-text">日期：${item.date}\n${item.text}</div>
+        <button class="del-btn" onclick="delRecord(${idx})">删除</button>
+        `;
+        recordWrap.appendChild(recDiv);
+    })
+}
+
+// 删除单条记录
+function delRecord(index){
+    recordList.splice(index,1);
+    localStorage.setItem(storageKey, JSON.stringify(recordList));
+    renderRecord();
+}
+
+// 页面加载渲染历史记录
+renderRecord();
+// 默认生成一条商品
+addGoods();
+</script>
+</body>
+</html>
