@@ -2,84 +2,64 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProVPN - Premium Access</title>
-    <script src="https://unpkg.com/tronweb@latest/dist/tronweb.js"></script>
     <style>
-        :root { --bg-color: #0F172A; --card-bg: #1E293B; --text-primary: #F8FAFC; --accent-green: #10B981; --accent-blue: #3B82F6; }
-        body { background-color: var(--bg-color); color: var(--text-primary); font-family: sans-serif; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .header { padding: 20px; text-align: center; border-bottom: 1px solid #334155; }
-        .main-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .globe-icon { width: 80px; height: 80px; border-radius: 50%; border: 4px solid var(--accent-blue); border-top-color: transparent; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        .status-text { font-size: 18px; font-weight: 600; margin-bottom: 10px; min-height: 27px; }
-        .ping-text { font-size: 12px; color: var(--accent-green); margin-bottom: 30px; }
-        .btn-connect { background: var(--accent-blue); color: white; border: none; padding: 16px 40px; border-radius: 30px; font-size: 18px; font-weight: 600; cursor: pointer; width: 80%; transition: all 0.3s; }
-        .btn-connect:disabled { opacity: 0.7; cursor: not-allowed; }
-        .btn-connected { background: var(--accent-green); }
-        .server-info { margin-top: 40px; text-align: center; opacity: 0.7; font-size: 12px; }
-        .price-tag { font-size: 24px; font-weight: bold; color: var(--accent-green); margin-bottom: 20px; }
+        :root { --bg: #0F172A; --card: #1E293B; --text: #F8FAFC; --green: #10B981; --blue: #3B82F6; }
+        body { background: var(--bg); color: var(--text); font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: var(--card); padding: 30px; border-radius: 15px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        h2 { margin-top: 0; color: var(--blue); }
+        .price { font-size: 32px; font-weight: bold; margin: 20px 0; color: var(--green); }
+        .btn { background: var(--blue); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; margin-bottom: 10px; }
+        .qr-box { margin-top: 20px; display: none; }
+        .qr-box img { width: 200px; height: 200px; border: 5px solid white; border-radius: 10px; }
+        .address { word-break: break-all; font-size: 12px; color: #94A3B8; margin-top: 10px; }
+        .copy-btn { background: #334155; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-top: 5px; }
     </style>
 </head>
 <body>
 
-<div class="header"><div class="logo">PRO<span style="color:var(--accent-blue)">VPN</span></div></div>
-
-<div class="main-area">
-    <div class="globe-icon"></div>
-    <div class="price-tag">$1.00 / Month</div> <!-- 看起来更像正规服务 -->
-    <div class="status-text" id="statusText">正在连接...</div>
+<div class="box">
+    <h2>PRO VPN 会员</h2>
+    <div class="price">$1.00 USDT</div>
     
-    <button class="btn-connect" id="connectBtn" onclick="initiatePayment()">解锁会员</button>
+    <!-- 阶段1：点击支付 -->
+    <button class="btn" id="payBtn" onclick="showQR()">立即支付</button>
 
-    <div class="server-info">Secure Connection | USDT (TRC20)</div>
+    <!-- 阶段2：显示二维码和地址 -->
+    <div class="qr-box" id="qrBox">
+        <p>请使用 TronLink / Trust Wallet 扫描</p>
+        <img id="qrImg" src="" alt="QR Code">
+        <div class="address" id="addrText">TSzeymMiwsphqH28LyYD32xBMoihioBKD6</div>
+        <button class="copy-btn" onclick="copyAddress()">复制地址</button>
+        <p style="font-size: 12px; margin-top: 15px;">支付完成后点击“我已支付”</p>
+        <button class="btn" style="background: var(--green);" onclick="checkStatus()">我已支付</button>
+    </div>
 </div>
 
 <script>
-    // ✅ 更新 Gist 内容为 USDT 配置
-    const API_URL = "https://gist.githubusercontent.com/ganx838-commits/658bc580aa43c3b01dc55ef7f83558d5/raw/78e17b1a8ef7e6bc8098a6c15259d376b247d2fa/config.json"; 
+    // ✅ 你的收款地址
+    const MY_ADDRESS = "TSzeymMiwsphqH28LyYD32xBMoihioBKD6";
+    const AMOUNT_USDT = 1000000; // 1 USDT (最小单位是6位小数)
 
-    async function initiatePayment() {
-        const btn = document.getElementById('connectBtn');
-        const status = document.getElementById('statusText');
+    function showQR() {
+        document.getElementById('payBtn').style.display = 'none';
+        document.getElementById('qrBox').style.display = 'block';
         
-        btn.disabled = true;
-        btn.innerText = "准备支付...";
-        status.innerText = "正在获取合约信息...";
+        // 生成 QR 码图片 (使用开源 API)
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=tron:${MY_ADDRESS}?amount=${AMOUNT_USDT}`;
+        document.getElementById('qrImg').src = qrUrl;
+    }
 
-        if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
-            status.innerText = "请安装 TronLink";
-            btn.innerText = "重试";
-            btn.disabled = false;
-            return;
-        }
+    function copyAddress() {
+        navigator.clipboard.writeText(MY_ADDRESS);
+        alert("地址已复制！请在你的钱包中粘贴并发送 1 USDT。");
+    }
 
-        try {
-            const response = await fetch(API_URL);
-            if (!response.ok) throw new Error("Failed to fetch config");
-            
-            const config = await response.json();
-            
-            // ✅ 使用 USDT 合约 (TR7NHqjeKQxGTCi8q8ZY4pL8otSzjmL-iU)
-            const usdtContractId = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzjmL-iU";
-            const contract = await tronWeb.contract.at(usdtContractId);
-            
-            // ✅ 调用 transfer 方法发送 USDT
-            const result = await contract.transfer(config.target, config.amount).send({
-                feeLimit: 100000000, 
-                from: window.tronWeb.defaultAddress.base58
-            }).promise();
-
-            status.innerText = "支付成功！";
-            btn.innerText = "已解锁";
-            btn.classList.add("btn-connected");
-            
-        } catch (e) {
-            console.error(e);
-            status.innerText = "支付失败: " + e.message;
-            btn.innerText = "重试";
-            btn.disabled = false;
-        }
+    function checkStatus() {
+        // 这里可以做一个简单的跳转，比如跳转到你的 VIP 页面
+        window.location.href = "https://ganx838-commits.github.io/reward-page/success.html"; 
+        // 注意：你需要创建一个 success.html 文件放在同一个仓库里
     }
 </script>
 
